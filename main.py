@@ -7,7 +7,7 @@ from telegram.ext import MessageHandler, Filters
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-def add_to_gsheet(first_name, last_name):
+def add_to_gsheet(first_name, last_name=''):
     gscope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     gcredentials = os.getenv('GOOGLE_SHEETS_KEY')
     gdocument = 'foodPlan'
@@ -17,12 +17,6 @@ def add_to_gsheet(first_name, last_name):
     wks.append_row([first_name, last_name])
 
 
-def get_last_name(update, context):
-    user = update.message.from_user
-    last_name = update.message.text
-    add_to_gsheet(user["first_name"], last_name)
-
-
 def start(update, context):
     user = update.message.from_user
     if user["last_name"]:
@@ -30,9 +24,7 @@ def start(update, context):
         add_to_gsheet(user["first_name"], user["last_name"])
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=f'Привет, {user["first_name"]}!')
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Напишите, пожалуйста, свою фамилию')
-        get_last_name_handler = MessageHandler(Filters.text, get_last_name)
-        dispatcher.add_handler(get_last_name_handler)
+        add_to_gsheet(user["first_name"])
 
 
 if __name__ == '__main__':
