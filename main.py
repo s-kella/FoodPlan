@@ -30,7 +30,7 @@ def start(update, context):
         add_to_gsheet(user["first_name"], user["last_name"])
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text=f'Привет, {user["first_name"]}!')
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Напишите, пожалуйса, свою фамилию')
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Напишите, пожалуйста, свою фамилию')
         get_last_name_handler = MessageHandler(Filters.text, get_last_name)
         dispatcher.add_handler(get_last_name_handler)
 
