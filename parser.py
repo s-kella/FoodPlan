@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from requests.exceptions import HTTPError
 
 
 def get_recipes(user_menu, user_allergies):
@@ -16,6 +17,7 @@ def get_recipes(user_menu, user_allergies):
     recipes = []
 
     global_response = requests.get(url, headers=headers, params=params)
+    global_response.raise_for_status()
     global_soup = BeautifulSoup(global_response.text, 'html.parser')
     global_items = global_soup.find_all('div', class_='tile-list__horizontal-tile horizontal-tile js-portions-count-parent js-bookmark__obj')
 
@@ -23,13 +25,14 @@ def get_recipes(user_menu, user_allergies):
         link = item.find('div', class_='clearfix').find('div', class_='horizontal-tile__content').find('h3', class_='horizontal-tile__item-title item-title').find('a').get('href')
         url = f'{host}{link}'
         recipe_response = requests.get(url, headers=headers)
+        recipe_response.raise_for_status()
         recipe_soup = BeautifulSoup(recipe_response.text, 'html.parser')
 
         instructions_html = recipe_soup.find_all('span', itemprop='text')
         for instruction_html in instructions_html:
             instruction = instruction_html.get_text()
             pure_instruction = instruction.replace('\xa0', ' ')
-            instructions.append(pure_instruction )
+            instructions.append(pure_instruction)
 
 
         ingredients_html = recipe_soup.find_all('span', itemprop='recipeIngredient')
