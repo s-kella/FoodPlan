@@ -126,19 +126,18 @@ def message_handler(update, callback_context):
         )
 
         message = 'Срок подписки'
-    elif text in type_of_subs:
-        match text:
-            case '1 день (19р)':
+    elif text in type_of_subs
+        if text == '1 день (19р)':
                 sum = 19
-            case '7 дней (59р)':
+        elif text == '7 дней (59р)':
                 sum = 59
-            case '30 дней(199р)':
+        elif text == '30 дней(199р)':
                 sum = 199
-            case '120 дней(599р)':
+        elif text == '120 дней(599р)':
                 sum = 599
-            case '180 дней(799р)':
+        elif text == '180 дней(799р)':
                 sum = 799
-            case '365 дней(999р)':
+        elif text == '365 дней(999р)':
                 sum = 999
 
         reply_markup = ReplyKeyboardMarkup (
