@@ -2,7 +2,17 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import MessageHandler, Filters
 
-from gsheets_functions import add_to_gsheet
+from gsheets_functions import add_to_gsheet, add_sub_to_gsheet
+
+
+sub_parameters = {
+        'menu_type': '',
+        'number_of_meals': '',
+        'number_of_persons': '',
+        'allergies': [],
+        'type_of_subs': '',
+        'promo_code': ''
+    }
 
 
 def start(update, context):
@@ -31,7 +41,7 @@ def start(update, context):
 
 def change_name(update, context):
     add_to_gsheet(update.message.text)
-    run_keyboard(update)
+    run_initial_keyboard(update)
 
 
 def get_answer_name(update, context):
@@ -40,7 +50,7 @@ def get_answer_name(update, context):
     if query.data == '1':
         query.edit_message_text(text='Добро пожаловать!')
         add_to_gsheet(update['callback_query']['message']['chat']['first_name'], update['callback_query']['message']['chat']['last_name'])
-        run_keyboard(query)
+        run_initial_keyboard(query)
     else:
         query.edit_message_text(text='Введите, пожалуйста, ваше имя')
         change_name_handler = MessageHandler(Filters.text, change_name)
@@ -56,14 +66,10 @@ def set_keyboards_buttons(buttons):
     return keyboard
 
 
-def run_keyboard(query):
-    start_buttons = ['Мои подписки', 'Оформить подписку', 'Закончить работу']
+def run_initial_keyboard(query):
+    start_buttons = ['Мои подписки', 'Оформить подписку']
 
-    reply_markup = ReplyKeyboardMarkup (
-        keyboard=[set_keyboards_buttons(start_buttons)],
-        resize_keyboard=True,
-    )
-
+    reply_markup = get_keyboard(start_buttons)
     message = 'Выберите действие:'
 
     query.message.reply_text(
@@ -73,10 +79,13 @@ def run_keyboard(query):
 
 
 def message_handler(update, callback_context):
+    global sub_parameters
+
     text = update.message.text
+    user = update.message.from_user
 
     my_subs_buttons = ['Вернуться']
-    start_buttons = ['Мои подписки', 'Оформить подписку', 'Закончить работу']
+    start_buttons = ['Мои подписки', 'Оформить подписку']
     menu = ['Классическое', 'Низкоуглеводное', 'Вегетарианское', 'Кето']
     number_of_meals = ['1 раз в день', '2 раза в день', '3 раза в день', '4 раза в день', '5 раз в день', '6 раз в день']
     number_of_persons = ['1 персона', '2 персоны', '3 персоны', '4 персоны', '5 персон', '6 персон']
@@ -85,48 +94,34 @@ def message_handler(update, callback_context):
     pay_buttons = ['Оплатить']
 
     if text == 'Мои подписки':
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(my_subs_buttons)],
-            resize_keyboard=True,
-        )
-
+        reply_markup = get_keyboard(my_subs_buttons)
         message = 'На данный момент подписок нет'
     elif text == 'Оформить подписку':
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(menu)],
-            resize_keyboard=True,
-        )
-
+        reply_markup = get_keyboard(menu)
         message = 'Выберите тип меню'
     elif text in menu:
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(number_of_meals)],
-            resize_keyboard=True,
-        )
+        sub_parameters['menu_type'] = text
 
+        reply_markup = get_keyboard(number_of_meals)
         message = 'Выберите количество приёмов пищи'
     elif text in number_of_meals:
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(number_of_persons)],
-            resize_keyboard=True,
-        )
+        sub_parameters['number_of_meals'] = text
 
+        reply_markup = get_keyboard(number_of_persons)
         message = 'Выберите количество персон'
     elif text in number_of_persons:
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(allergies)],
-            resize_keyboard=True,
-        )
+        sub_parameters['number_of_persons'] = text
 
-        message = 'Аллергия'
+        reply_markup = get_keyboard(allergies)
+        message = 'Аллергии'
     elif text in allergies:
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(type_of_subs)],
-            resize_keyboard=True,
-        )
+        sub_parameters['allergies'].append(text)
 
+        reply_markup = get_keyboard(type_of_subs)
         message = 'Срок подписки'
     elif text in type_of_subs:
+        sub_parameters['type_of_subs'] = text
+
         if text == '1 день (19р)':
                 sum = 19
         elif text == '7 дней (59р)':
@@ -140,22 +135,31 @@ def message_handler(update, callback_context):
         elif text == '365 дней(999р)':
                 sum = 999
 
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(pay_buttons)],
-            resize_keyboard=True,
-        )
-
+        reply_markup = get_keyboard(pay_buttons)
         message = f'Оплатите Вашу подписку стоимостью {sum}р.'
-    elif text == 'Закончить работу':
-        reply_markup = ReplyKeyboardRemove()
-        message = 'Работа бота завершена'
 
     elif text in pay_buttons:
-        reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(start_buttons)],
-            resize_keyboard=True,
-        )
+        reply_markup = get_keyboard(start_buttons)
+        message = 'Выберите действие:'
 
+        # функция оплаты здесь вызывается
+
+        # Добавление подписки в гугл документ
+        if user["last_name"]:
+            add_sub_to_gsheet(user["first_name"], sub_parameters, user["last_name"])
+        else:
+            add_sub_to_gsheet(user["first_name"], sub_parameters)
+
+        sub_parameters = {
+            'menu_type': '',
+            'number_of_meals': 0,
+            'number_of_persons': 0,
+            'allergies': [],
+            'type_of_subs': '',
+            'promo_code': ''
+        }
+    elif text in my_subs_buttons:
+        reply_markup = get_keyboard(start_buttons)
         message = 'Выберите действие:'
     else:
         message=''
@@ -165,3 +169,11 @@ def message_handler(update, callback_context):
             text = message,
             reply_markup = reply_markup,
         )
+
+def get_keyboard(buttons):
+    reply_markup = ReplyKeyboardMarkup (
+            keyboard=[set_keyboards_buttons(buttons)],
+            resize_keyboard=True,
+        )
+
+    return reply_markup
