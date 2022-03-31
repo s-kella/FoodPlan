@@ -6,8 +6,8 @@ from telegram.ext import CommandHandler
 from telegram.ext import CallbackQueryHandler
 from telegram.ext import MessageHandler, Filters
 
-from telegrams_functions import change_name, get_answer_name, message_handler
-from telegrams_functions import run_keyboard, set_keyboards_buttons, start
+from telegrams_functions import get_answer_name, message_handler
+from telegrams_functions import start
 
 
 if __name__ == '__main__':
