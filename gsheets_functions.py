@@ -11,3 +11,4 @@ def add_to_gsheet(first_name, last_name=''):
     gc = gspread.authorize(credentials)
     wks = gc.open(gdocument).sheet1
     wks.append_row([first_name, last_name])
+    
