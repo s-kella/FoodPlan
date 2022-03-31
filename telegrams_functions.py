@@ -126,7 +126,7 @@ def message_handler(update, callback_context):
         )
 
         message = 'Срок подписки'
-    elif text in type_of_subs
+    elif text in type_of_subs:
         if text == '1 день (19р)':
                 sum = 19
         elif text == '7 дней (59р)':
@@ -165,4 +165,3 @@ def message_handler(update, callback_context):
             text = message,
             reply_markup = reply_markup,
         )
-        
