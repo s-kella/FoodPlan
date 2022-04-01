@@ -29,10 +29,9 @@ def add_sub_to_gsheet(first_name, sub_parameters, last_name=''):
         else:
             users_allergies = allergy
 
-    print(sub_parameters)
-
     wks.append_row([first_name, last_name,
                     sub_parameters['menu_type'], sub_parameters['number_of_meals'],
                     sub_parameters['number_of_persons'], users_allergies,
-                    sub_parameters['type_of_subs'], sub_parameters['promo_code'],])
+                    sub_parameters['type_of_subs'], sub_parameters['promo_code'],
+                    sub_parameters['price']])
     
