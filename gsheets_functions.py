@@ -10,14 +10,15 @@ def init():
     credentials = ServiceAccountCredentials.from_json_keyfile_name(gcredentials, gscope)
     return gspread.authorize(credentials)
 
-def add_to_gsheet(first_name, last_name=''):
+def add_to_gsheet(users_personal_data):
     gdocument = 'foodPlan'
     gc = init()
     wks = gc.open(gdocument).sheet1
-    wks.append_row([first_name, last_name])
+    wks.append_row([users_personal_data['first_name'], users_personal_data['last_name'],
+                    users_personal_data['phone_number']])
 
 
-def add_sub_to_gsheet(first_name, sub_parameters, last_name=''):
+def add_sub_to_gsheet(users_personal_data, sub_parameters):
     gdocument = 'foodPlan'
     gc = init()
     wks = gc.open(gdocument).worksheet('Лист2')
@@ -29,9 +30,9 @@ def add_sub_to_gsheet(first_name, sub_parameters, last_name=''):
         else:
             users_allergies = allergy
 
-    wks.append_row([first_name, last_name,
-                    sub_parameters['menu_type'], sub_parameters['number_of_meals'],
-                    sub_parameters['number_of_persons'], users_allergies,
-                    sub_parameters['type_of_subs'], sub_parameters['promo_code'],
-                    sub_parameters['price']])
+    wks.append_row([users_personal_data['first_name'], users_personal_data['last_name'],
+                    users_personal_data['phone_number'], sub_parameters['menu_type'], 
+                    sub_parameters['number_of_meals'], sub_parameters['number_of_persons'], 
+                    users_allergies, sub_parameters['type_of_subs'], 
+                    sub_parameters['promo_code'], sub_parameters['price']])
     
