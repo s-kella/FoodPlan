@@ -6,19 +6,34 @@ from gsheets_functions import add_to_gsheet, add_sub_to_gsheet
 
 
 has_promo_code = False
+has_enter_name = False
 
 sub_parameters = {
-        'menu_type': '',
-        'number_of_meals': '',
-        'number_of_persons': '',
-        'allergies': [],
-        'type_of_subs': '',
-        'price': 0,
-        'promo_code': ''
-    }
+    'menu_type': '',
+    'number_of_meals': '',
+    'number_of_persons': '',
+    'allergies': [],
+    'type_of_subs': '',
+    'price': 0,
+    'promo_code': ''
+}
+
+users_personal_data = {
+    'first_name': '',
+    'last_name': '',
+    'phone_number': ''
+}
 
 
 def start(update, context):
+    global users_personal_data
+
+    users_personal_data = {
+        'first_name': '',
+        'last_name': '',
+        'phone_number': ''
+    }
+
     reply_markup = ReplyKeyboardRemove()
 
     user = update.message.from_user
@@ -42,22 +57,26 @@ def start(update, context):
     update.message.reply_text('Это ваше имя?', reply_markup=reply_markup)
 
 
-def change_name(update, context):
-    add_to_gsheet(update.message.text)
-    run_initial_keyboard(update)
-
-
 def get_answer_name(update, context):
+    global users_data, has_enter_name
+
     query = update.callback_query
     query.answer()
     if query.data == '1':
         query.edit_message_text(text='Добро пожаловать!')
-        add_to_gsheet(update['callback_query']['message']['chat']['first_name'], update['callback_query']['message']['chat']['last_name'])
-        run_initial_keyboard(query)
+        users_personal_data['first_name'] = update['callback_query']['message']['chat']['first_name']
+        users_personal_data['last_name'] = update['callback_query']['message']['chat']['last_name']
+        get_users_phone(update, context)
     else:
         query.edit_message_text(text='Введите, пожалуйста, ваше имя')
-        change_name_handler = MessageHandler(Filters.text, change_name)
-        dispatcher.add_handler(change_name_handler)
+        has_enter_name = True
+
+
+def get_users_phone(update, context):
+    reply_markup = ReplyKeyboardMarkup([[KeyboardButton(str('Share contact'), request_contact=True)]], resize_keyboard=True)
+    message = 'Предоставьте свой номер телефона'
+
+    response = context.bot.sendMessage(update.effective_chat.id, message, reply_markup=reply_markup)
 
 
 def set_keyboards_buttons(buttons):
@@ -68,23 +87,13 @@ def set_keyboards_buttons(buttons):
 
     return keyboard
 
-def run_initial_keyboard(query):
-    start_buttons = ['Мои подписки', 'Оформить подписку']
-
-    reply_markup = get_keyboard(start_buttons)
-    message = 'Выберите действие:'
-
-    query.message.reply_text(
-        text = message,
-        reply_markup = reply_markup,
-    )
-
 
 def message_handler(update, context):
-    global sub_parameters, has_promo_code
+    global sub_parameters, users_personal_data, has_promo_code, has_enter_name
 
     text = update.message.text
     user = update.message.from_user
+    message = ''
 
     my_subs_buttons = ['Вернуться']
     start_buttons = ['Мои подписки', 'Оформить подписку']
@@ -208,10 +217,7 @@ def message_handler(update, context):
         # функция оплаты здесь вызывается
 
         # Добавление подписки в гугл документ
-        if user["last_name"]:
-            add_sub_to_gsheet(user["first_name"], sub_parameters, user["last_name"])
-        else:
-            add_sub_to_gsheet(user["first_name"], sub_parameters)
+        add_sub_to_gsheet(users_personal_data, sub_parameters,)
 
         sub_parameters = {
             'menu_type': '',
@@ -226,8 +232,18 @@ def message_handler(update, context):
     elif text in my_subs_buttons:
         reply_markup = get_keyboard(start_buttons)
         message = 'Выберите действие:'
-    else:
-        message=''
+    elif text and has_enter_name:
+        has_enter_name = False
+        users_personal_data['first_name'] = text
+
+        get_users_phone(update, context)
+    elif update.message.contact.phone_number:
+        users_personal_data['phone_number'] = update.message.contact.phone_number
+        add_to_gsheet(users_personal_data)
+
+        reply_markup = get_keyboard(start_buttons)
+        message = 'Выберите действие:'
+
 
     if message:
         update.message.reply_text(
