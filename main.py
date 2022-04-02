@@ -6,8 +6,8 @@ from telegram.ext import CommandHandler
 from telegram.ext import CallbackQueryHandler
 from telegram.ext import MessageHandler, Filters
 
-from telegrams_functions import get_answer_name, message_handler
-from telegrams_functions import start
+from telegrams_functions import get_answer_name
+from telegrams_functions import message_handler, start
 
 
 if __name__ == '__main__':
