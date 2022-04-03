@@ -2,11 +2,13 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import MessageHandler, Filters
 
-from gsheets_functions import add_to_gsheet, add_sub_to_gsheet
+from gsheets_functions import add_to_gsheet, add_sub_to_gsheet, get_data_from_worksheet
 
 
 has_promo_code = False
 has_enter_name = False
+subscriptions = []
+my_subs_buttons = []
 
 sub_parameters = {
     'menu_type': '',
@@ -23,7 +25,6 @@ users_personal_data = {
     'last_name': '',
     'phone_number': ''
 }
-
 
 def start(update, context):
     global users_personal_data
@@ -76,7 +77,7 @@ def get_users_phone(update, context):
     reply_markup = ReplyKeyboardMarkup([[KeyboardButton(str('Share contact'), request_contact=True)]], resize_keyboard=True)
     message = 'Предоставьте свой номер телефона'
 
-    response = context.bot.sendMessage(update.effective_chat.id, message, reply_markup=reply_markup)
+    context.bot.sendMessage(update.effective_chat.id, message, reply_markup=reply_markup)
 
 
 def set_keyboards_buttons(buttons):
@@ -90,12 +91,12 @@ def set_keyboards_buttons(buttons):
 
 def message_handler(update, context):
     global sub_parameters, users_personal_data, has_promo_code, has_enter_name
+    global subscriptions, my_subs_buttons
 
     text = update.message.text
     user = update.message.from_user
     message = ''
 
-    my_subs_buttons = ['Вернуться']
     start_buttons = ['Мои подписки', 'Оформить подписку']
     menu_buttons = ['Классическое', 'Низкоуглеводное', 'Вегетарианское', 'Кето']
     number_of_meals_buttons = ['1 раз в день', '2 раза в день', '3 раза в день', '4 раза в день', '5 раз в день', '6 раз в день']
@@ -106,8 +107,34 @@ def message_handler(update, context):
     pay_buttons = ['Оплатить']
 
     if text == 'Мои подписки':
-        reply_markup = get_keyboard(my_subs_buttons)
-        message = 'На данный момент подписок нет'
+        subs = get_data_from_worksheet('Лист2', users_personal_data['phone_number'])
+        keyboard = []
+
+        for sub in subs:
+            button = []
+
+            if sub[6]:
+                sub_button = f'{sub[3]}, {sub[4]}, {sub[5]}, аллергии ({sub[6]})'
+            else:
+                sub_button = f'{sub[3]}, {sub[4]}, {sub[5]}, аллергий нет'
+
+            button.append(sub_button)
+            keyboard.append(button)
+            my_subs_buttons.append(sub_button)
+
+        keyboard.append(['Вернуться'])
+        my_subs_buttons.append('Вернуться')
+
+        reply_markup = ReplyKeyboardMarkup (
+            keyboard=keyboard,
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+
+        if subs:
+            message = 'Ваши подписки:'
+        else:
+            message = 'На данный момент подписок нет'
     elif text == 'Оформить подписку':
         reply_markup = get_keyboard(menu_buttons)
         message = 'Выберите тип меню'
@@ -230,15 +257,38 @@ def message_handler(update, context):
         }
 
     elif text in my_subs_buttons:
-        reply_markup = get_keyboard(start_buttons)
-        message = 'Выберите действие:'
+
+        if text == 'Вернуться':
+            reply_markup = get_keyboard(start_buttons)
+            message = 'Выберите действие:'
+
+            my_subs_buttons = []
+        else:
+            context.bot.sendMessage(update.effective_chat.id, text)
+
+            choosen_sub_parameters = text.split(', ', 3)
+            menu_type = choosen_sub_parameters[0]                         # Тип меню
+            number_of_meals = int(choosen_sub_parameters[1][:1])          # Количество приёмов пищи
+            number_of_persons = int(choosen_sub_parameters[2][:1])        # Количество персон
+
+            if choosen_sub_parameters[3][:8] == 'аллергии':
+                allergies = choosen_sub_parameters[3][10:-1].split(', ')  # Аллергии (если есть)
+            else:
+                allergies = []                                            # Аллергии (если нет)
+
+            # ДИМА, ЗДЕСЬ ВЫЗОВ ФУНКЦИИ ТВОЕЙ
+
     elif text and has_enter_name:
         has_enter_name = False
         users_personal_data['first_name'] = text
 
         get_users_phone(update, context)
     elif update.message.contact.phone_number:
-        users_personal_data['phone_number'] = update.message.contact.phone_number
+        if update.message.contact.phone_number[:1] == '+':
+            users_personal_data['phone_number'] = update.message.contact.phone_number[1:]
+        else:
+            users_personal_data['phone_number'] = update.message.contact.phone_number
+
         add_to_gsheet(users_personal_data)
 
         reply_markup = get_keyboard(start_buttons)
