@@ -35,4 +35,19 @@ def add_sub_to_gsheet(users_personal_data, sub_parameters):
                     sub_parameters['number_of_meals'], sub_parameters['number_of_persons'], 
                     users_allergies, sub_parameters['type_of_subs'], 
                     sub_parameters['promo_code'], sub_parameters['price']])
+
+
+def get_data_from_worksheet(title, phone):
+    gdocument = 'foodPlan'
+    gc = init()
+    wks = gc.open(gdocument).worksheet(title)
+    all_values = wks.get_all_values()
+
+    returned_values = []
+
+    for value in all_values:
+        if phone == value[2]:
+            returned_values.append(value)
+
+    return returned_values
     
