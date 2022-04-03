@@ -1,8 +1,11 @@
+import random
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import MessageHandler, Filters
 
 from gsheets_functions import add_to_gsheet, add_sub_to_gsheet, get_data_from_worksheet
+from parser import get_image, get_recipes, send_recipe
 
 
 has_promo_code = False
@@ -264,19 +267,30 @@ def message_handler(update, context):
 
             my_subs_buttons = []
         else:
-            context.bot.sendMessage(update.effective_chat.id, text)
+            context.bot.sendMessage(update.effective_chat.id, f'{text}. Подготавливаем Ваши рецепты. Это может занять некоторое время.')
 
             choosen_sub_parameters = text.split(', ', 3)
-            menu_type = choosen_sub_parameters[0]                         # Тип меню
-            number_of_meals = int(choosen_sub_parameters[1][:1])          # Количество приёмов пищи
-            number_of_persons = int(choosen_sub_parameters[2][:1])        # Количество персон
+            menu_type = choosen_sub_parameters[0]
+            number_of_meals = int(choosen_sub_parameters[1][:1])
+            number_of_persons = int(choosen_sub_parameters[2][:1])
 
             if choosen_sub_parameters[3][:8] == 'аллергии':
-                allergies = choosen_sub_parameters[3][10:-1].split(', ')  # Аллергии (если есть)
+                allergies = choosen_sub_parameters[3][10:-1].split(', ')
             else:
-                allergies = []                                            # Аллергии (если нет)
+                allergies = []
 
-            # ДИМА, ЗДЕСЬ ВЫЗОВ ФУНКЦИИ ТВОЕЙ
+            recipes = []
+            page = 1
+            effective_amount = number_of_meals * 10
+            while (len(recipes) < effective_amount):
+
+                recipes += get_recipes(menu_type, allergies, page)
+                page += 1
+
+            user_recipes = random.choices(recipes, k=number_of_meals)
+
+            send_recipe(user_recipes, context, update)
+
 
     elif text and has_enter_name:
         has_enter_name = False

@@ -4,6 +4,25 @@ from requests.exceptions import HTTPError
 from allergies import check_for_allergy, make_allergies_params
 
 
+def send_recipe(user_recipes, context, update):
+
+    for user_recipe in user_recipes:
+        all_ingredients = ''
+        name = user_recipe['name']
+        photo_link = user_recipe['photo_link']
+        calories = user_recipe['calories']
+        ingredients = user_recipe['ingredients']
+        instructions = user_recipe['instructions']
+
+        for ingredient in ingredients:
+            all_ingredients += f'\n{ingredient}'
+
+        photo = get_image(photo_link)
+        context.bot.send_photo(update.effective_chat.id, photo, caption=f'{name}. \nКоличество калорий: {calories}')
+        context.bot.sendMessage(update.effective_chat.id,
+                                f'\n Ингредиенты:{all_ingredients}\n\nРецепт:\n{instructions}')
+
+
 def get_image(url):
     response = requests.get(url)
     response.raise_for_status()
@@ -69,7 +88,7 @@ def get_recipes(user_menu, user_allergies, page):
 
     for pure_link in purified_links:
         recipe_approved = True
-        instructions = []
+        instructions = ''
         ingredients_with_quantity = []
         ingredients = []
 
@@ -85,18 +104,14 @@ def get_recipes(user_menu, user_allergies, page):
             ingredient_quantity_html = ingredient_html.find_next('span').find_next('span')
             ingredient_quantity = ingredient_quantity_html.get_text()
             ingredients.append(ingredient)
-            ingredients_with_quantity.append(
-                {
-                    ingredient: ingredient_quantity
-                }
-            )
+            ingredients_with_quantity.append(f'{ingredient} - {ingredient_quantity} ')
 
         instructions_html = recipe_soup.find_all('span', itemprop='text')
 
         for instruction_html in instructions_html:
             instruction = instruction_html.get_text()
             pure_instruction = instruction.replace('\xa0', ' ')
-            instructions.append(pure_instruction )
+            instructions += f'{pure_instruction} '
 
         for ingredient in ingredients:
             if not check_for_allergy(ingredient, allergies):
@@ -111,7 +126,7 @@ def get_recipes(user_menu, user_allergies, page):
                         'photo_link': recipe_soup.find('span', itemprop='resultPhoto').get('content'),
                         'calories': recipe_soup.find('span', itemprop='calories').get_text(),
                         'ingredients': ingredients_with_quantity,
-                        'istructions': instructions
+                        'instructions': instructions
                     }
                 )
             except AttributeError:
