@@ -1,38 +1,27 @@
 import os
 
-from dotenv import load_dotenv
-from aiogram.types import Message, LabeledPrice, PreCheckoutQuery
-from aiogram.types.message import ContentType
-
-from main import dp, bot
+from telegram import LabeledPrice
 
 
-@dp.message_handler(commands=['buy'])
-async def buy_process(message: Message):
-    await bot.send_invoice(message.chat.id,
-                           title='Подписка на FoodPlan',
-                           description='Подписка на бот с планом питания FoodPlan',
-                           provider_token=payment_token,
-                           currency='rub',
-                           prices=[LabeledPrice(label='Подписка на FoodPlan', amount=10000)],
-                           start_parameter='example',
-                           payload='some_invoice')
+def pay_process(update, context, sub_parameters) -> None:
+    chat_id = update.message.chat_id
+    title = "Подписка на FoodPlan"
+    description = "Подписка на бот с планом питания FoodPlan"
+    payload = "Custom-Payload"
+    provider_token = os.getenv("PAYMENTS_PROVIDER_TOKEN")
+    currency = "rub"
+    price = sub_parameters["price"]
+    prices = [LabeledPrice("Подписка на FoodPlan", price * 100)]
 
 
-@dp.pre_checkout_query_handler(lambda q: True)
-async def checkout_process(pre_checkout_query: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-
-
-@dp.message_handler(content_types=ContentType.SUCCESSFUL_PAYMENT)
-async def successful_payment(message: Message):
-    successful_payment_message = 'Платеж на сумму {total_amount} {currency} совершен успешно!'
-    await bot.send_message(
-        message.chat.id,
-        successful_payment_message.format(total_amount=message.successful_payment.total_amount // 100,
-                                              currency=message.successful_payment.currency)
+    context.bot.send_invoice(
+        chat_id, title, description, payload, provider_token, currency, prices
     )
 
 
-load_dotenv()
-payment_token = os.getenv('PAYMENTS_PROVIDER_TOKEN')
+def precheckout_callback(update, context) -> None:
+    query = update.pre_checkout_query
+    if query.invoice_payload != 'Custom-Payload':
+        query.answer(ok=False, error_message="Что-то пошло не так...")
+    else:
+        query.answer(ok=True)
