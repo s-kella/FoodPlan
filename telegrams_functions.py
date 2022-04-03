@@ -77,7 +77,7 @@ def set_keyboards_buttons(buttons):
 
 def message_handler(update, context):
     global sub_parameters, users_personal_data, has_promo_code, has_enter_name
-    global subscriptions, my_subs_buttons, has_phone, payment_success
+    global my_subs_buttons, has_phone, payment_success
 
     text = update.message.text
     user = update.message.from_user
@@ -329,7 +329,6 @@ has_promo_code = False
 has_enter_name = False
 has_phone = False
 payment_success = False
-subscriptions = []
 my_subs_buttons = []
 
 sub_parameters = {
