@@ -6,28 +6,8 @@ from telegram.ext import MessageHandler, Filters
 
 from gsheets_functions import add_to_gsheet, add_sub_to_gsheet, get_data_from_worksheet
 from parser import get_image, get_recipes, send_recipe
+from payment import pay_process
 
-
-has_promo_code = False
-has_enter_name = False
-subscriptions = []
-my_subs_buttons = []
-
-sub_parameters = {
-    'menu_type': '',
-    'number_of_meals': '',
-    'number_of_persons': '',
-    'allergies': [],
-    'type_of_subs': '',
-    'price': 0,
-    'promo_code': ''
-}
-
-users_personal_data = {
-    'first_name': '',
-    'last_name': '',
-    'phone_number': ''
-}
 
 def start(update, context):
     global users_personal_data
@@ -77,8 +57,11 @@ def get_answer_name(update, context):
 
 
 def get_users_phone(update, context):
-    reply_markup = ReplyKeyboardMarkup([[KeyboardButton(str('Share contact'), request_contact=True)]], resize_keyboard=True)
+    global has_phone
+
+    reply_markup = ReplyKeyboardMarkup([[KeyboardButton(str('Предоставить номер телефона'), request_contact=True)]], resize_keyboard=True)
     message = 'Предоставьте свой номер телефона'
+    has_phone = True
 
     context.bot.sendMessage(update.effective_chat.id, message, reply_markup=reply_markup)
 
@@ -94,7 +77,7 @@ def set_keyboards_buttons(buttons):
 
 def message_handler(update, context):
     global sub_parameters, users_personal_data, has_promo_code, has_enter_name
-    global subscriptions, my_subs_buttons
+    global subscriptions, my_subs_buttons, has_phone, payment_success
 
     text = update.message.text
     user = update.message.from_user
@@ -105,9 +88,8 @@ def message_handler(update, context):
     number_of_meals_buttons = ['1 раз в день', '2 раза в день', '3 раза в день', '4 раза в день', '5 раз в день', '6 раз в день']
     number_of_persons_buttons = ['1 персона', '2 персоны', '3 персоны', '4 персоны', '5 персон', '6 персон']
     allergies_buttons = ['Рыба и морепродукты', 'Мясо', 'Зерновые', 'Продукты пчеловодства', 'Орехи и бобовые', 'Молочные продукты', 'Аллергий нет', 'Больше аллергий нет']
-    type_of_subs_buttons = ['1 день (19р)', '7 дней (59р)', '30 дней(199р)', '120 дней(599р)', '180 дней(799р)', '365 дней(999р)']
+    type_of_subs_buttons = ['1 день (99р)', '7 дней (199р)', '30 дней(399р)', '120 дней(599р)', '180 дней(799р)', '365 дней(999р)']
     promo_code_buttons = ['Да, есть', 'Нет']
-    pay_buttons = ['Оплатить']
 
     if text == 'Мои подписки':
         subs = get_data_from_worksheet('Лист2', users_personal_data['phone_number'])
@@ -182,7 +164,7 @@ def message_handler(update, context):
         if text == 'Аллергий нет' or text == 'Больше аллергий нет':
             reply_markup = ReplyKeyboardMarkup (
                 keyboard=[
-                    ['1 день (19р)', '7 дней (59р)', '30 дней(199р)'],
+                    ['1 день (99р)', '7 дней (199р)', '30 дней(399р)'],
                     ['120 дней(599р)', '180 дней(799р)', '365 дней(999р)']
                 ],
                 resize_keyboard=True,
@@ -206,12 +188,12 @@ def message_handler(update, context):
     elif text in type_of_subs_buttons:
         sub_parameters['type_of_subs'] = text
 
-        if text == '1 день (19р)':
-                sub_parameters['price'] = 19
-        elif text == '7 дней (59р)':
-                sub_parameters['price'] = 59
-        elif text == '30 дней(199р)':
+        if text == '1 день (99р)':
+                sub_parameters['price'] = 99
+        elif text == '7 дней (199р)':
                 sub_parameters['price'] = 199
+        elif text == '30 дней(399р)':
+                sub_parameters['price'] = 399
         elif text == '120 дней(599р)':
                 sub_parameters['price'] = 599
         elif text == '180 дней(799р)':
@@ -219,35 +201,43 @@ def message_handler(update, context):
         elif text == '365 дней(999р)':
                 sub_parameters['price'] = 999
 
-        reply_markup = get_keyboard(promo_code_buttons)
+        reply_markup = get_keyboard(promo_code_buttons, True)
         message = f'Есть ли у вас промокод?'
+        one_time_keyboard = True
 
     elif text in promo_code_buttons:
+
         if text == 'Да, есть':
             has_promo_code = True
 
             reply_markup = ReplyKeyboardRemove()
             message = 'Напишите, пожалуйста, промокод'
         else:
-            reply_markup = get_keyboard(pay_buttons)
-            message = f'Оплатите Вашу подписку стоимостью {sub_parameters["price"]}р.'
+            pay_process(update, context, sub_parameters)
 
-    elif text and has_promo_code:
-        sub_parameters['promo_code'] = text
-        sub_parameters['price'] = int(sub_parameters['price'] * 0.8)
-        has_promo_code = False
+    elif has_promo_code:
 
-        reply_markup = get_keyboard(pay_buttons)
-        message = f'Оплатите Вашу подписку стоимостью {sub_parameters["price"]}р.'
+        if text == 'BELIBOBA':
+            sub_parameters['promo_code'] = text
+            sub_parameters['price'] = int(sub_parameters['price'] * 0.8)
+            has_promo_code = False
 
-    elif text in pay_buttons:
+            pay_process(update, context, sub_parameters)
+        elif text == 'Продолжить':
+            has_promo_code = False
+            pay_process(update, context, sub_parameters)
+
+        else:
+            reply_markup = get_keyboard(['Продолжить'], True)
+            message = 'Такого промокода нет \nНапишите, пожалуйста, промокод ещё раз, либо нажмите "Продолжить"'
+
+    elif payment_success == True:
         reply_markup = get_keyboard(start_buttons)
         message = 'Выберите действие:'
 
-        # функция оплаты здесь вызывается
-
         # Добавление подписки в гугл документ
-        add_sub_to_gsheet(users_personal_data, sub_parameters,)
+        add_sub_to_gsheet(users_personal_data, sub_parameters)
+        payment_success = False
 
         sub_parameters = {
             'menu_type': '',
@@ -297,7 +287,9 @@ def message_handler(update, context):
         users_personal_data['first_name'] = text
 
         get_users_phone(update, context)
-    elif update.message.contact.phone_number:
+    elif has_phone:
+        has_phone = False
+
         if update.message.contact.phone_number[:1] == '+':
             users_personal_data['phone_number'] = update.message.contact.phone_number[1:]
         else:
@@ -315,10 +307,43 @@ def message_handler(update, context):
             reply_markup = reply_markup,
         )
 
-def get_keyboard(buttons):
+def get_keyboard(buttons, one_time_keyboard=False):
     reply_markup = ReplyKeyboardMarkup (
-            keyboard=[set_keyboards_buttons(buttons)],
-            resize_keyboard=True,
+            keyboard = [set_keyboards_buttons(buttons)],
+            resize_keyboard = True,
+            one_time_keyboard = one_time_keyboard,
         )
 
     return reply_markup
+
+
+def successful_payment_callback(update, context) -> None:
+    global payment_success
+
+    payment_success = True
+    update.message.reply_text('Оплата прошла успешно! Спасибо за покупку!')
+    message_handler(update, context)
+
+
+has_promo_code = False
+has_enter_name = False
+has_phone = False
+payment_success = False
+subscriptions = []
+my_subs_buttons = []
+
+sub_parameters = {
+    'menu_type': '',
+    'number_of_meals': '',
+    'number_of_persons': '',
+    'allergies': [],
+    'type_of_subs': '',
+    'price': 0,
+    'promo_code': ''
+}
+
+users_personal_data = {
+    'first_name': '',
+    'last_name': '',
+    'phone_number': ''
+}
