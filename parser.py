@@ -110,7 +110,7 @@ def get_recipes(user_menu, user_allergies, page):
                         'name': recipe_soup.find('meta', itemprop='keywords').get('content'),
                         'photo_link': recipe_soup.find('span', itemprop='resultPhoto').get('content'),
                         'calories': recipe_soup.find('span', itemprop='calories').get_text(),
-                        'ingredients': ingredients,
+                        'ingredients': ingredients_with_quantity,
                         'istructions': instructions
                     }
                 )
@@ -120,5 +120,13 @@ def get_recipes(user_menu, user_allergies, page):
     return recipes
 
 
+if __name__ == '__main__':
 
+    recipes = []
+    page = 1
+    while (len(recipes) < 10):
+        recipes += get_recipes(['Классическое'], ['Мясо'], page)
+        page += 1
 
+    for recipe in recipes:
+        print(recipe)
