@@ -5,9 +5,11 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import CallbackQueryHandler
 from telegram.ext import MessageHandler, Filters
+from telegram.ext import PreCheckoutQueryHandler
 
-from telegrams_functions import get_answer_name
-from telegrams_functions import message_handler, start
+from payment import precheckout_callback
+from telegrams_functions import get_answer_name, message_handler
+from telegrams_functions import start, successful_payment_callback
 
 
 if __name__ == '__main__':
@@ -21,7 +23,9 @@ if __name__ == '__main__':
     dispatcher.add_handler(start_handler)
 
     updater.dispatcher.add_handler(CallbackQueryHandler(get_answer_name))
+    updater.dispatcher.add_handler(MessageHandler(Filters.successful_payment, successful_payment_callback))
     updater.dispatcher.add_handler(MessageHandler(Filters.all, message_handler))
+    updater.dispatcher.add_handler(PreCheckoutQueryHandler(precheckout_callback))
 
     updater.start_polling()
     updater.idle()
