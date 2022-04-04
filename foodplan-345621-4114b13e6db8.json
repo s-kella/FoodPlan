@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "foodplan-345621",
+  "private_key_id": "4114b13e6db850088862641213ebc20923ce48ed",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDc0IIGxUTKjQF1\n2XD5ZkHBMfaP2AddXhU8eU2FGozeFVH/G9VH2qLA1LqpCRJU6cu816alGwUWgO/y\nOj9Bp7YeQdo2bbGgtvmx5B26/V40FddvaLa/Cc27imdjgrE3ih+IUkz+kzvN3d/J\nyWMN4NQcwCZyW0LJqAL2/POFmPCVH5ZsGSk2wr/5y0iS2hiRVE7RHeW4K5jm4sBv\nAjPi6llRthVcLAlbXVs8AalXFb85Do+RTnjBwo+XGH8UQkW9t9ROz/Va2LQ3nJrG\njX/YGq6Ye8PIU/EWADLuFHiz3GWOTh9SKdAXeNN9iccOrV2GKixKHgS7so3QWKaT\nlM6nRu/bAgMBAAECggEAaLMa/B/cSthKGXmFFlQ0mGja2oCZmV1LX3W62oJoycK9\nMuOdIOlbo2gaq5yoCwgiOQPducqSgoWXgDi7FqPxd+5Mi+M+RpCL25votul9GeBD\nWsmBYRrCaIqrFCV7ZvTAl9BCPrFMOYRbIKAzLfjtSkaX1EBObjSSV09AHpgSdvn2\nFir7g5uLPaCwmTyDEqDqsoEXxnXSQCSN4X7hC74br3pBIrMt8sZf3KCqaCQAsF/d\nukBqEJ+omHjqh2ayf5GOHa86k0nvCCvntLqNb2ZDqiubI8nMQE+Y3XNJqrhxACSL\nr8i/f5vjVUcI8oixdqbrhtQiIt0wHhGrWlyS52x1VQKBgQD4ednrWw8DiGV5MAKD\ngb4A8fqDmsCvipoKHxtPWqz/lQq8pLwlM4E+0FnaxISjD/8VKdDV6qcJj6lw1Rut\nagxJW5OKdYO9qjJlI1y9tMoW0z9GwZCME/QbqEDzNdxPWyVuVsX8GTy4u6/HhB67\nVDSyhv6ohhugIusvyjhPrLyELQKBgQDjgDqW8jI6Sg+AAtHx2wXgX5UvMqezMsPI\njisxE7hwZlY/mkI3kYqv3na4C+zsOiAlviTQB+z2kzVQSk2y45FD6vdQFp8RWcHh\n1SUqb06bXfNu2WdkteTZwMwvLxXI1FgoUqqrtYud2wMmjp4SdZNOlmdkSoU0NhxE\nr2+jubkhJwKBgEkmpm9RqYPive0Fo1fP9H4WvyfLgXqslVjxe3rLOS8tU7Hh1bom\nBaDWef2b6WiQJwq1+tNfd7mq37lmI/XTyLY4DaGvow9NcfSwincXKH+7xV8xUTrM\nDQuvZx+y9Z8vOD/ZsAPd8jB4oPFeBiYkTjdY4tP+V1e3sAGryRQ7yGwpAoGBAIyZ\neBxHzMD3eoLbu1Kk0QntKK8FuFzod9Vf/9OR44Abzxv5wwjCuxqb+3UdcaxA9BM/\nY1LqQwnUyrM3aLOxLtrxwSzO/jnj5g4jA5gpOESPGN6eH+c+/xOQsuBKUkVO7rjk\n9jOuvH2vmE/g/lJcNdDw5S83WwF8m5XbcryWEJMrAoGBAIiQWWwqkI/jpmvcuZeh\nQVLMVCHvLd5G/nKj2kIfBFWyhoBiy+6NRQ+PapeLtBhBEahD9xBdVyZkqHjYqRkK\nCkQa5a1xCyBRyb7D3PtQ/dl+RuZShdd8F1L7uigfoNXaNrfo7yUdzPco2IyhXiz+\nHg3hdbmBETaNIjQwAo12HvMx\n-----END PRIVATE KEY-----\n",
+  "client_email": "foodplan@foodplan-345621.iam.gserviceaccount.com",
+  "client_id": "109766340366788297412",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/foodplan%40foodplan-345621.iam.gserviceaccount.com"
+}
